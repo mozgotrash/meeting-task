@@ -18,4 +18,9 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     public List<Meeting> findMeetingsByDate(@Param("date") LocalDate date);
 
     public List<Meeting> findByDate(LocalDate date);
+
+    @Query(
+            value = "SELECT * FROM Meeting m ORDER BY m.date",
+            nativeQuery = true)
+    public List<Meeting> findAllMeetings();
 }

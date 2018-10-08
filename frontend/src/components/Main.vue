@@ -18,8 +18,40 @@
           </div>
         </div>
 
+        <div v-if="allMeetings.length == 0">
+          <p>(Добавленных митингов нет)</p>
+        </div>
+
+        <button class="addMeeting-button" @click="sendMeetingsForSort(allMeetings)">Создать расписание</button>
+
+        <hr class="border-line">
+
         <div>
-          <button @click="sendMeetingsForSort(allMeetings)">Создать расписание</button>
+          <h1>Расписание</h1>
+
+          <div v-for="(meeting, index) in timetable" :key="index">
+            <div v-if="func(meeting, index)">
+              {{meeting.date}}
+            </div>
+
+            <div class="timetable-meeting">
+              <div>{{meeting.startTime}} {{meeting.endTime}}</div>
+              <div>{{meeting.employee}}</div>
+            </div>
+
+          </div>
+
+          <hr class="border-line">
+
+          <div>
+            <div><h2>Получить расписание в конкретный день</h2></div>
+            <el-date-picker
+              v-model="chosenCreatedDate"
+              type="date"
+              placeholder="Дата митингов">
+            </el-date-picker>
+            <button class="addMeeting-button" @click="getTimetableInParticularDate(allMeetings)">Получить</button>
+          </div>
         </div>
 
       </div>
@@ -92,6 +124,7 @@
         selectedEmpl: '',
         selectedDuration: '',
         chosenDate: null,
+        chosenCreatedDate: null,
         selectedTimeStart: {
           hh: '',
           mm: '',
@@ -108,7 +141,10 @@
 
         allMeetings: [],
 
-        warning: ''
+        warning: '',
+
+        timetable: [],
+        currentDateInSchedule: ''
       }
     },
 
@@ -148,13 +184,53 @@
 
       sendMeetingsForSort: function (allMeetings) {
         let requestData = {
-          officeWorkTime: '0900 1730',
           meetings: allMeetings
         }
 
         axios.post(`/api/addMeetings`, requestData)
           .then(response => {
-            this.message = response.data
+            this.timetable = response.data.meetings;
+            for (let t = 0; t < this.timetable.length - 1; t++) {
+              if (this.timetable[t].date === this.timetable[t + 1].date) {
+                if (this.timetable[t].startTime > this.timetable[t + 1].startTime) {
+                  let temp = this.timetable[t];
+                  this.timetable[t] = this.timetable[t + 1];
+                  this.timetable[t + 1] = temp;
+                }
+              }
+            }
+          })
+          .catch(e => {
+            this.errors.push(e)
+          })
+      },
+
+      func: function (meeting, index) {
+        if (index === 0) {
+          this.currentDateInSchedule = meeting.date;
+
+          return true;
+        }
+        if (meeting.date !== this.currentDateInSchedule) {
+          this.currentDateInSchedule = meeting.date;
+          return true;
+        }
+        return false;
+      },
+
+      getTimetableInParticularDate: function () {
+        axios.get(`/api/getByDate?` + 'date=' + moment(this.chosenCreatedDate).format('YYYY-MM-DD'))
+          .then(response => {
+            this.timetable = response.data.meetings;
+            for (let t = 0; t < this.timetable.length - 1; t++) {
+              if (this.timetable[t].date === this.timetable[t + 1].date) {
+                if (this.timetable[t].startTime > this.timetable[t + 1].startTime) {
+                  let temp = this.timetable[t];
+                  this.timetable[t] = this.timetable[t + 1];
+                  this.timetable[t + 1] = temp;
+                }
+              }
+            }
           })
           .catch(e => {
             this.errors.push(e)
@@ -289,11 +365,21 @@
 
   .submission {
     border: 1px solid gray;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     width: 400px;
   }
 
-  .submission-info {
-    margin-bottom: 10px;
+  .border-line {
+    margin-right: 15px;
   }
+
+  .timetable-meeting {
+    border: 1px solid gray;
+    margin-bottom: 10px;
+    width: 400px;
+  }
+
+
+
+
 </style>

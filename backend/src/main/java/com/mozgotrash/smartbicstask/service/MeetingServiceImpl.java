@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -23,6 +24,7 @@ public class MeetingServiceImpl implements MeetingService {
         return meetingsAll;
     }
 
+    @Override
     public void getMeetingsFromDTO(List<MeetingDTO> meetingsDTO) {
         meetingsDTO.stream().map(meetingDTO -> {
             int meetingDuration = Integer.parseInt(meetingDTO.getDuration());
@@ -32,12 +34,24 @@ public class MeetingServiceImpl implements MeetingService {
             meeting.setEndTime(meeting.getStartTime().plus(meetingDuration, ChronoUnit.HOURS));
             meeting.setDate(LocalDate.parse(meetingDTO.getDate()));
             meeting.setEmployee(meetingDTO.getEmployee());
-            meeting.setSubmissionDate(LocalDate.now());
+            meeting.setSubmissionDate(LocalDateTime.now());
+            meeting.setDuration(Integer.parseInt(meetingDTO.getDuration()));
+
 
             return meeting;
         }).filter(this::isThisMeetingInOfficeTime)
                 .filter(this::IsThisMeetingInTimeOfAnotherMeeting)
                 .forEach(meetingRepository::save);
+    }
+
+    @Override
+    public List<Meeting> findAll() {
+        return meetingRepository.findAllMeetings();
+    }
+
+    @Override
+    public List<Meeting> findByDate(LocalDate date) {
+        return meetingRepository.findMeetingsByDate(date);
     }
 
     private boolean isThisMeetingInOfficeTime(final Meeting meeting) {
@@ -52,10 +66,7 @@ public class MeetingServiceImpl implements MeetingService {
 
     }
 
-    /**
-     * @param meeting
-     * @return true - ...//TODO
-     */
+
     private boolean IsThisMeetingInTimeOfAnotherMeeting(final Meeting meeting) {
         final LocalTime startMeeting = meeting.getStartTime();
         final LocalTime finishMeeting = meeting.getEndTime();
@@ -65,10 +76,13 @@ public class MeetingServiceImpl implements MeetingService {
             LocalTime finishAddedMeeting = existingMeeting.getEndTime();
 
             //true - если митинг не пересекается
+            boolean b = (startMeeting.isBefore(startAddedMeeting) || startMeeting.equals(finishAddedMeeting)
+                    || startMeeting.isAfter(finishAddedMeeting));
             return (startMeeting.isBefore(startAddedMeeting) || startMeeting.equals(finishAddedMeeting)
                     || startMeeting.isAfter(finishAddedMeeting)) &&
-                    (finishMeeting.isBefore(startAddedMeeting) || finishMeeting.equals(startAddedMeeting))
-                    || finishMeeting.isAfter(finishAddedMeeting);
+                    ((finishMeeting.isBefore(startAddedMeeting) || finishMeeting.equals(startAddedMeeting))
+                            || finishMeeting.isAfter(finishAddedMeeting)) && !(startMeeting.isBefore(startAddedMeeting) && finishMeeting.isAfter(finishAddedMeeting));
+
         });
     }
 }
