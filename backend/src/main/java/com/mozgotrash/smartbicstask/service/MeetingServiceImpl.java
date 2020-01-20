@@ -25,7 +25,7 @@ public class MeetingServiceImpl implements MeetingService {
     }
 
     @Override
-    public void getMeetingsFromDTO(List<MeetingDTO> meetingsDTO) {
+    public void saveNeetings(List<MeetingDTO> meetingsDTO) {
         meetingsDTO.stream().map(meetingDTO -> {
             int meetingDuration = Integer.parseInt(meetingDTO.getDuration());
             Meeting meeting = new Meeting();

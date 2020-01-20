@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface MeetingService {
 
-    void getMeetingsFromDTO(List<MeetingDTO> meetings);
+    void saveNeetings(List<MeetingDTO> meetings);
 
     List<Meeting> findAll();
 

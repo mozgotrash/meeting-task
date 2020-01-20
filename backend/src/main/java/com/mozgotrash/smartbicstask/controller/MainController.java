@@ -22,7 +22,7 @@ public class MainController {
     @RequestMapping(value = "/addMeetings")
     public @ResponseBody
     String hi(@RequestBody RequestMeetingData requestMeetingData) {
-        meetingService.getMeetingsFromDTO(requestMeetingData.getMeetings());
+        meetingService.saveNeetings(requestMeetingData.getMeetings());
 
         List<Meeting> meetings = meetingService.findAll();
         ResponseMeetingData response = new ResponseMeetingData();
@@ -53,7 +53,5 @@ public class MainController {
         }
         return jsonResponse;
     }
-
-
 
 }
